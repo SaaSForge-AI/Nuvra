@@ -174,7 +174,6 @@ model User {
   emailCampaigns    EmailCampaign[]
   automations       Automation[]
   affiliateClicks   AffiliateClick[]
-  affiliateSales    AffiliateSale[]
   reviews           Review[]
 }
 
