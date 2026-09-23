@@ -3,18 +3,23 @@
   "version": "1.0.0",
   "private": true,
   "description": "Nuvra - Create. Sell. Teach. Scale. All-in-one SaaS for funnels, courses, marketplace, CRM, emails, automations.",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
+    "postinstall": "prisma generate || echo 'prisma generate failed - using custom SQLite fallback for local dev'",
     "dev": "next dev -p 3000 -H 0.0.0.0",
     "build": "next build",
     "start": "next start -p 3000 -H 0.0.0.0",
     "lint": "next lint",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "db:generate": "echo 'Using custom SQLite, no generate needed'",
-    "db:migrate": "echo 'Using custom SQLite, tables auto-created'",
-    "db:push": "echo 'Using custom SQLite, tables auto-created'",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed-new.ts",
-    "db:studio": "echo 'Use sqlite browser for dev.db'"
+    "db:seed:postgres": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^5.19.1",

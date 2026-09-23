@@ -28,17 +28,41 @@ It replaces 12 tools with one coherent dashboard:
 - Stripe (mock fallback if keys missing), email architecture for Resend/Postmark
 - Event tracking, ledger, notifications, command palette (CMD+K)
 
-## Quick Start
+## Quick Start (Local Dev - Zero Config)
 
 ```bash
 npm install
 cp .env.example .env
-# Edit .env if needed
+# Default .env uses SQLite file:./dev.db - no external DB needed
 npm run db:seed
 npm run dev
 ```
 
 Open http://localhost:3000
+
+### Vercel Deployment (Production)
+
+Vercel requires PostgreSQL (SQLite won't persist on serverless). The app auto-detects:
+
+- `DATABASE_URL=file:...` → custom SQLite layer via `node:sqlite` (Node 22) — for local dev
+- `DATABASE_URL=postgres://...` → Prisma + PostgreSQL — for Vercel/prod
+
+**Vercel setup:**
+
+1. Create Postgres DB (Vercel Postgres, Neon, Supabase, etc)
+2. Set env vars in Vercel dashboard:
+   - `DATABASE_URL=postgresql://...`
+   - `NEXTAUTH_SECRET` (random 32+ chars)
+   - `JWT_SECRET` (same or different random)
+   - `NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app`
+   - `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` (optional, mock works)
+   - `EMAIL_API_KEY` (optional)
+3. Deploy — `postinstall` runs `prisma generate`, build creates tables via Prisma? You need to run migration:
+   - Locally against prod DB: `DATABASE_URL=your_postgres_url npx prisma db push` or `prisma migrate deploy`
+   - Or set `npm run db:seed:postgres` after push
+4. Done — app will use Prisma Postgres on Vercel, SQLite locally
+
+See `DEPLOYMENT.md` for details.
 
 Demo accounts after seed:
 

@@ -1,13 +1,14 @@
 // Nuvra - Prisma Schema
-// For local dev we use SQLite for zero-config. In production, switch provider to postgresql and DATABASE_URL to postgres.
-// This schema is fully compatible with PostgreSQL - just change provider.
+// Production (Vercel) uses PostgreSQL. Local dev uses custom SQLite layer via node:sqlite (zero-config) that doesn't rely on Prisma provider.
+// For Vercel: set DATABASE_URL to postgres and provider postgresql (as below) - postinstall will generate client.
+// For local dev: DATABASE_URL="file:./dev.db" and custom SQLite layer in lib/db.ts creates tables automatically, bypassing Prisma.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
