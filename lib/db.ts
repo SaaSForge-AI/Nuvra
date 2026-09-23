@@ -13,12 +13,36 @@ if (typeof process !== "undefined" && process.emitWarning) {
   };
 }
 
+import { ensurePostgresSchema } from "./db-bootstrap";
+
 let prismaInstance: any = null;
 let isUsingPrisma = false;
+/** Set when the DB layer cannot work at all; surfaced by /api/health. */
+export let dbInitError: string | null = null;
 
 function isPostgresUrl(url: string | undefined) {
   if (!url) return false;
   return url.startsWith("postgres://") || url.startsWith("postgresql://");
+}
+
+const MODEL_NAMES = ["User","Profile","Workspace","WorkspaceMembership","Product","ProductPrice","Course","CourseModule","Lesson","Quiz","QuizQuestion","QuizAnswer","Enrollment","Progress","Certificate","Funnel","FunnelStep","Page","PageBlock","LinkInBio","Lead","Customer","Order","OrderItem","Payment","Refund","Reseller","ResellerSale","Commission","Affiliate","AffiliateClick","AffiliateSale","EmailCampaign","EmailSequence","Automation","AutomationAction","Notification","Coupon","Payout","AuditLog","Event","LedgerEntry","MarketplaceListing","Review"];
+
+/**
+ * A client whose every query rejects with `message`.
+ * IMPORTANT: we never throw while this module is being imported. A throw at import
+ * time happens *outside* the route handlers' try/catch, so Next.js answers with its
+ * HTML 500 page and the login form shows "Unexpected token '<'". Rejecting per query
+ * keeps every API route able to answer JSON with an actionable error.
+ */
+function makeUnavailableClient(message: string) {
+  const fail = () => Promise.reject(new Error(message));
+  const model = new Proxy({}, { get: () => fail });
+  const obj: any = { $disconnect: async () => {}, $connect: fail, $queryRawUnsafe: fail, $executeRawUnsafe: fail, $transaction: fail };
+  for (const t of MODEL_NAMES) {
+    obj[t.charAt(0).toLowerCase() + t.slice(1)] = model;
+    obj[t] = model;
+  }
+  return obj;
 }
 
 const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
@@ -26,25 +50,36 @@ const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
 if (isPostgresUrl(dbUrl)) {
   // Production / Vercel path - use Prisma
   try {
-    // Dynamically require to avoid issues when not generated
     const { PrismaClient } = require("@prisma/client");
-    // Check if client is properly generated (has models)
-    // The stub client from failed generate will have no real models, but we try anyway
     const globalForPrisma = global as unknown as { prisma: any };
-    prismaInstance = globalForPrisma.prisma || new PrismaClient();
-    if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prismaInstance;
-    isUsingPrisma = true;
-    console.log("[DB] Using Prisma with PostgreSQL - Vercel ready");
-  } catch (e) {
-    console.error("[DB] DATABASE_URL is PostgreSQL but PrismaClient failed to initialize.");
-    console.error("[DB] On Vercel, ensure `prisma generate` ran in postinstall. On local, check network to binaries.prisma.sh");
-    console.error("[DB] Error:", e);
-    // In production (Vercel), we should NOT fallback to SQLite - throw
-    if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
-      throw new Error("PrismaClient not initialized but DATABASE_URL is PostgreSQL. Run `prisma generate` and ensure DATABASE_URL is set. On Vercel, this should happen in postinstall.");
+    if (!globalForPrisma.prisma) {
+      const base = new PrismaClient();
+      // Auto-bootstrap: before the first model query, make sure the schema exists
+      // (fresh Neon/Supabase DB = no tables). Memoized, so it costs one cheap check
+      // per server instance. Raw queries on `base` bypass this hook (no recursion).
+      globalForPrisma.prisma = base.$extends({
+        query: {
+          $allModels: {
+            async $allOperations({ args, query }: any) {
+              await ensurePostgresSchema(base);
+              return query(args);
+            },
+          },
+        },
+      });
     }
-    console.warn("[DB] Falling back to SQLite for local dev");
-    // Fall through to SQLite for local dev
+    prismaInstance = globalForPrisma.prisma;
+    isUsingPrisma = true;
+    console.log("[DB] Using Prisma with PostgreSQL (auto-bootstrap enabled)");
+  } catch (e: any) {
+    console.error("[DB] DATABASE_URL is PostgreSQL but PrismaClient failed to initialize:", e?.message || e);
+    if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
+      dbInitError =
+        "Prisma Client non généré alors que DATABASE_URL est PostgreSQL. Sur Vercel, `prisma generate` doit tourner au build (postinstall) - relance un déploiement sans cache.";
+      prismaInstance = makeUnavailableClient(dbInitError);
+    } else {
+      console.warn("[DB] Falling back to SQLite for local dev");
+    }
   }
 }
 
@@ -52,25 +87,9 @@ if (!prismaInstance) {
   // If we are on Vercel and no postgres URL, we must fail clearly - Vercel FS is read-only
   if (process.env.VERCEL && !isPostgresUrl(dbUrl)) {
     console.error("[DB] VERCEL detected but DATABASE_URL is not postgres. Set DATABASE_URL to a Postgres URL (Neon/Supabase) in Vercel env vars.");
-    // Create a mock that throws helpful JSON errors instead of crashing with HTML
-    const errorMock = new Proxy({}, {
-      get(_target, prop) {
-        if (prop === "$disconnect") return async () => {};
-        return () => {
-          throw new Error("DATABASE_URL manquant sur Vercel. Va dans Vercel > Settings > Environment Variables > ajoute DATABASE_URL (postgres://...) puis Redeploy. Sans ça, l'API renvoie du HTML et tu vois <!DOCTYPE> error.");
-        };
-      }
-    });
-    // Create full mock with all tables
-    const tables = ["User","Profile","Workspace","WorkspaceMembership","Product","ProductPrice","Course","CourseModule","Lesson","Quiz","QuizQuestion","QuizAnswer","Enrollment","Progress","Certificate","Funnel","FunnelStep","Page","PageBlock","LinkInBio","Lead","Customer","Order","OrderItem","Payment","Refund","Reseller","ResellerSale","Commission","Affiliate","AffiliateClick","AffiliateSale","EmailCampaign","EmailSequence","Automation","AutomationAction","Notification","Coupon","Payout","AuditLog","Event","LedgerEntry","MarketplaceListing","Review"];
-    const mockObj: any = { $disconnect: async () => {} };
-    for (const t of tables) {
-      const lower = t.charAt(0).toLowerCase() + t.slice(1);
-      mockObj[lower] = errorMock;
-      mockObj[t] = errorMock;
-    }
-    mockObj.order = errorMock;
-    prismaInstance = mockObj;
+    dbInitError =
+      "DATABASE_URL manquante (ou non PostgreSQL) sur Vercel. Vercel > Settings > Environment Variables > DATABASE_URL=postgresql://... puis Redeploy. Les tables sont créées automatiquement au premier accès.";
+    prismaInstance = makeUnavailableClient(dbInitError);
   } else {
   // SQLite fallback for dev
   console.log("[DB] Using custom SQLite layer (node:sqlite) - dev mode");
@@ -96,7 +115,29 @@ if (!prismaInstance) {
   const dir = path.dirname(resolvedPath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
-  const db = new DatabaseSync(resolvedPath);
+  const rawDb = new DatabaseSync(resolvedPath);
+
+  // node:sqlite only binds null/number/bigint/string/Buffer. Prisma callers pass
+  // booleans, Dates and undefined (optional fields) -> normalize every bound value.
+  const toSqlValue = (v: any) => {
+    if (v === undefined) return null;
+    if (typeof v === "boolean") return v ? 1 : 0;
+    if (v instanceof Date) return v.toISOString();
+    if (v !== null && typeof v === "object" && !(v instanceof Uint8Array)) return JSON.stringify(v);
+    return v;
+  };
+  const db = {
+    exec: (sql: string) => rawDb.exec(sql),
+    close: () => rawDb.close(),
+    prepare(sql: string) {
+      const stmt = rawDb.prepare(sql);
+      return {
+        run: (...a: any[]) => stmt.run(...a.map(toSqlValue)),
+        all: (...a: any[]) => stmt.all(...a.map(toSqlValue)),
+        get: (...a: any[]) => stmt.get(...a.map(toSqlValue)),
+      };
+    },
+  };
 
   try {
     db.exec("PRAGMA journal_mode=WAL;");
@@ -1043,16 +1084,33 @@ CREATE TABLE IF NOT EXISTS Review (
       "EmailCampaign", "EmailSequence", "Automation", "AutomationAction", "Notification",
       "Coupon", "Payout", "AuditLog", "Event", "LedgerEntry", "MarketplaceListing", "Review"
     ];
+    // Prisma's API is Promise-based (callers use .then/.catch/await). The Model
+    // methods are synchronous internally, so expose them as async to match.
+    const asAsync = (m: Model) =>
+      new Proxy(m, {
+        get(target: any, prop) {
+          const v = target[prop];
+          if (typeof v !== "function") return v;
+          return (...args: any[]) => {
+            try {
+              return Promise.resolve(v.apply(target, args));
+            } catch (e) {
+              return Promise.reject(e);
+            }
+          };
+        },
+      });
     const obj: any = {};
     for (const t of tables) {
       const lower = t.charAt(0).toLowerCase() + t.slice(1);
-      obj[lower] = new Model(t);
+      obj[lower] = asAsync(new Model(t));
       obj[t] = obj[lower];
     }
     obj.order = obj.Order;
     obj.$disconnect = async () => {
       try { db.close(); } catch {}
     };
+    obj.$connect = async () => {};
     return obj;
   }
 

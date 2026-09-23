@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { postJson } from "@/lib/fetch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,17 +19,7 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const text = await res.text();
-      let data: any;
-      try { data = JSON.parse(text); } catch {
-        throw new Error(text.includes("<!DOCTYPE") ? "Erreur serveur - DB non configurée. Vérifie DATABASE_URL sur Vercel." : "Erreur serveur");
-      }
-      if (!res.ok) throw new Error(data.error || "Register failed");
+      await postJson("/api/auth/register", form, "Inscription impossible");
       router.push("/onboarding");
     } catch (err: any) {
       setError(err.message);

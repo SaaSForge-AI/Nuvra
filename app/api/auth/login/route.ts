@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyPassword, createToken, setSessionCookie } from "@/lib/auth";
+import { readJsonBody, serverErrorResponse } from "@/lib/api-errors";
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const body = await readJsonBody<{ email?: string; password?: string }>(req);
+    const email = typeof body?.email === "string" ? body.email.trim() : "";
+    const password = typeof body?.password === "string" ? body.password : "";
 
     if (!email || !password) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -33,6 +36,7 @@ export async function POST(req: NextRequest) {
 
     await setSessionCookie(token);
 
+    // Audit logging must never block a successful login.
     await prisma.auditLog.create({
       data: {
         userId: user.id,
@@ -41,12 +45,10 @@ export async function POST(req: NextRequest) {
         entityId: user.id,
         ip: req.headers.get("x-forwarded-for") || "unknown",
       },
-    });
+    }).catch((err: any) => console.error("[auth] audit log failed:", err?.message));
 
     return NextResponse.json({ success: true, onboardingDone: user.onboardingDone });
   } catch (e: any) {
-    console.error(e);
-    const msg = e.message?.includes("DATABASE_URL") ? e.message : "Login failed - vérifie logs Vercel. Si <!DOCTYPE> avant, c'était DB manquante, maintenant fixé.";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverErrorResponse(e, "Login failed");
   }
 }

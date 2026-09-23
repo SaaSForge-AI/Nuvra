@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { postJson } from "@/lib/fetch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -19,20 +20,7 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const text = await res.text();
-      let data: any;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        console.error("Non-JSON login response:", text.slice(0,300));
-        throw new Error(text.includes("<!DOCTYPE") ? "Erreur serveur - DB non configurée sur Vercel. Vérifie DATABASE_URL et redéploie. (Erreur <!DOCTYPE>)" : "Erreur serveur - réponse invalide");
-      }
-      if (!res.ok) throw new Error(data.error || "Login failed");
+      const data = await postJson<{ onboardingDone: boolean }>("/api/auth/login", { email, password }, "Identifiants invalides");
       if (!data.onboardingDone) router.push("/onboarding");
       else router.push("/dashboard");
     } catch (err: any) {
