@@ -1,0 +1,784 @@
+// Nuvra - Prisma Schema
+// For local dev we use SQLite for zero-config. In production, switch provider to postgresql and DATABASE_URL to postgres.
+// This schema is fully compatible with PostgreSQL - just change provider.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  CREATOR
+  RESELLER
+  CUSTOMER
+  STUDENT
+}
+
+enum ProductType {
+  COURSE
+  EBOOK
+  DIGITAL_FILE
+  TEMPLATE
+  COACHING
+  CONSULTATION
+  BUNDLE
+  NUVRA_ACADEMY_RESELL
+}
+
+enum CourseStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum FunnelStepType {
+  LANDING
+  LEAD_CAPTURE
+  SALES
+  CHECKOUT
+  UPSELL
+  DOWNSELL
+  THANK_YOU
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum PayoutStatus {
+  PENDING
+  AVAILABLE
+  PROCESSING
+  PAID
+  FAILED
+  REVERSED
+}
+
+enum ResellerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum LedgerType {
+  SALE
+  REFUND
+  COMMISSION
+  PAYOUT
+  REVERSAL
+  ADJUSTMENT
+  FEE
+}
+
+enum AutomationTriggerType {
+  USER_CREATED
+  LEAD_CREATED
+  PRODUCT_PURCHASED
+  CHECKOUT_ABANDONED
+  COURSE_STARTED
+  LESSON_COMPLETED
+  COURSE_COMPLETED
+  RESELLER_APPROVED
+  AFFILIATE_SALE
+}
+
+enum AutomationActionType {
+  SEND_EMAIL
+  ADD_TAG
+  REMOVE_TAG
+  CREATE_CUSTOMER
+  SEND_NOTIFICATION
+  ENROLL_COURSE
+  WAIT
+  WEBHOOK
+}
+
+enum EmailStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  FAILED
+}
+
+enum NotificationType {
+  NEW_SALE
+  NEW_STUDENT
+  COURSE_COMPLETED
+  RESELLER_SALE
+  PAYMENT_RECEIVED
+  REFUND_REQUESTED
+  SYSTEM
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  passwordHash      String?
+  firstName         String?
+  lastName          String?
+  avatarUrl         String?
+  role              UserRole @default(CREATOR)
+  isSuperAdmin      Boolean  @default(false)
+  emailVerified     Boolean  @default(false)
+  emailVerifiedAt   DateTime?
+  onboardingDone    Boolean  @default(false)
+  activity          String?
+  goal              String?
+  usageType         String?
+  stripeCustomerId  String?
+  stripeConnectId   String?
+  username          String?  @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  profile           Profile?
+  workspaces        WorkspaceMembership[]
+  products          Product[]
+  courses           Course[]
+  funnels           Funnel[]
+  pages             Page[]
+  linkInBio         LinkInBio?
+  reseller          Reseller?
+  affiliate         Affiliate?
+  orders            Order[]
+  enrollments       Enrollment[]
+  leads             Lead[]
+  customers         Customer[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  events            Event[]
+  ledgerEntries     LedgerEntry[]
+  payouts           Payout[]
+  certificates      Certificate[]
+  emailCampaigns    EmailCampaign[]
+  automations       Automation[]
+  affiliateClicks   AffiliateClick[]
+  affiliateSales    AffiliateSale[]
+  reviews           Review[]
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio       String?
+  website   String?
+  twitter   String?
+  linkedin  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Workspace {
+  id          String                @id @default(cuid())
+  name        String
+  slug        String                @unique
+  ownerId     String
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  members     WorkspaceMembership[]
+  products    Product[]
+  courses     Course[]
+  funnels     Funnel[]
+  pages       Page[]
+}
+
+model WorkspaceMembership {
+  id          String    @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        String    @default("OWNER")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  @@unique([userId, workspaceId])
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  userId        String
+  workspaceId   String?
+  title         String
+  description   String?
+  type          ProductType @default(COURSE)
+  price         Int         @default(0) // in cents
+  comparePrice  Int?
+  currency      String      @default("usd")
+  isFree        Boolean     @default(false)
+  coverUrl      String?
+  slug          String      @unique
+  isPublished   Boolean     @default(false)
+  stripeProductId String?
+  stripePriceId String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace     Workspace?  @relation(fields: [workspaceId], references: [id])
+  prices        ProductPrice[]
+  course        Course?
+  orderItems    OrderItem[]
+  funnelSteps   FunnelStep[]
+}
+
+model ProductPrice {
+  id        String   @id @default(cuid())
+  productId String
+  amount    Int
+  currency  String   @default("usd")
+  interval  String? // monthly, yearly, one-time
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Course {
+  id              String       @id @default(cuid())
+  userId          String
+  workspaceId     String?
+  productId       String?      @unique
+  title           String
+  description     String?
+  shortDesc       String?
+  coverUrl        String?
+  category        String?
+  level           String?      @default("beginner")
+  price           Int          @default(0)
+  isFree          Boolean      @default(false)
+  status          CourseStatus @default(DRAFT)
+  slug            String       @unique
+  isNuvraAcademy  Boolean      @default(false)
+  learningOutcomes String? // JSON
+  requirements    String?
+  totalDuration   Int?         @default(0)
+  certificateEnabled Boolean   @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace       Workspace?   @relation(fields: [workspaceId], references: [id])
+  product         Product?     @relation(fields: [productId], references: [id])
+  modules         CourseModule[]
+  enrollments     Enrollment[]
+  marketplaceListing MarketplaceListing?
+  reviews         Review[]
+}
+
+model CourseModule {
+  id          String   @id @default(cuid())
+  courseId    String
+  title       String
+  description String?
+  position    Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  moduleId    String
+  title       String
+  description String?
+  content     String?  // rich text / markdown
+  videoUrl    String?
+  audioUrl    String?
+  pdfUrl      String?
+  duration    Int?     // seconds
+  position    Int      @default(0)
+  isFree      Boolean  @default(false)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  module      CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  quiz        Quiz?
+  progresses  Progress[]
+}
+
+model Quiz {
+  id          String   @id @default(cuid())
+  lessonId    String   @unique
+  title       String
+  description String?
+  passingScore Int     @default(70)
+  createdAt   DateTime @default(now())
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions   QuizQuestion[]
+}
+
+model QuizQuestion {
+  id        String   @id @default(cuid())
+  quizId    String
+  question  String
+  position  Int      @default(0)
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers   QuizAnswer[]
+}
+
+model QuizAnswer {
+  id         String  @id @default(cuid())
+  questionId String
+  answer     String
+  isCorrect  Boolean @default(false)
+  question   QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model Enrollment {
+  id          String   @id @default(cuid())
+  userId      String
+  courseId    String
+  progress    Float    @default(0)
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  enrolledAt  DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progresses  Progress[]
+  certificate Certificate?
+  @@unique([userId, courseId])
+}
+
+model Progress {
+  id           String   @id @default(cuid())
+  enrollmentId String
+  lessonId     String
+  isCompleted  Boolean  @default(false)
+  completedAt  DateTime?
+  watchTime    Int      @default(0)
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson       Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  @@unique([enrollmentId, lessonId])
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  userId      String
+  courseId    String? // optional for query, but enrollment already has course
+  enrollmentId String  @unique
+  code        String   @unique
+  studentName String
+  courseTitle String
+  creatorName String?
+  issuedAt    DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollment  Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+}
+
+model Funnel {
+  id          String   @id @default(cuid())
+  userId      String
+  workspaceId String?
+  name        String
+  description String?
+  slug        String   @unique
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  steps       FunnelStep[]
+}
+
+model FunnelStep {
+  id          String         @id @default(cuid())
+  funnelId    String
+  productId   String?
+  pageId      String?
+  type        FunnelStepType
+  name        String
+  position    Int            @default(0)
+  config      String? // JSON
+  conversionRate Float?       @default(0)
+  views       Int            @default(0)
+  conversions Int            @default(0)
+  funnel      Funnel         @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+  product     Product?       @relation(fields: [productId], references: [id])
+  page        Page?          @relation(fields: [pageId], references: [id])
+}
+
+model Page {
+  id          String   @id @default(cuid())
+  userId      String
+  workspaceId String?
+  funnelId    String?
+  title       String
+  slug        String   @unique
+  description String?
+  isPublished Boolean  @default(false)
+  seoTitle    String?
+  seoDesc     String?
+  content     String? // JSON blocks
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+  blocks      PageBlock[]
+  funnelSteps FunnelStep[]
+}
+
+model PageBlock {
+  id        String   @id @default(cuid())
+  pageId    String
+  type      String // hero, text, image, video, cta, form, pricing, testimonials, faq, features, countdown, product, checkout, social_proof, logo_cloud
+  content   String   // JSON
+  position  Int      @default(0)
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+}
+
+model LinkInBio {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  username    String   @unique
+  displayName String?
+  bio         String?
+  avatarUrl   String?
+  theme       String?  // JSON
+  isPublished Boolean  @default(true)
+  blocks      String?  // JSON array of blocks
+  views       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  firstName String?
+  lastName  String?
+  phone     String?
+  source    String?
+  tags      String? // JSON array
+  status    String?  @default("lead")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  userId    String // owner
+  email     String
+  firstName String?
+  lastName  String?
+  phone     String?
+  tags      String? // JSON
+  totalSpent Int     @default(0)
+  ordersCount Int    @default(0)
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    Order[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String? // buyer
+  customerId      String?
+  ownerId         String // seller / creator
+  total           Int
+  subtotal        Int
+  fees            Int         @default(0)
+  tax             Int         @default(0)
+  discount        Int         @default(0)
+  currency        String      @default("usd")
+  status          OrderStatus @default(PENDING)
+  stripeSessionId String?
+  stripePaymentId String?
+  couponCode      String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  buyer           User?       @relation(fields: [userId], references: [id])
+  customer        Customer?   @relation(fields: [customerId], references: [id])
+  items           OrderItem[]
+  payment         Payment?
+  refund          Refund?
+  ledgerEntries   LedgerEntry[]
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String?
+  courseId  String?
+  title     String
+  quantity  Int    @default(1)
+  price     Int
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String        @unique
+  amount        Int
+  currency      String        @default("usd")
+  status        PaymentStatus @default(PENDING)
+  stripeId      String?
+  method        String?
+  createdAt     DateTime      @default(now())
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Refund {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  amount    Int
+  reason    String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Reseller {
+  id            String         @id @default(cuid())
+  userId        String         @unique
+  status        ResellerStatus @default(PENDING)
+  activatedAt   DateTime?
+  totalSales    Int            @default(0)
+  totalRevenue  Int            @default(0)
+  totalCommission Int          @default(0)
+  customSlug    String?        @unique
+  branding      String? // JSON
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sales         ResellerSale[]
+}
+
+model ResellerSale {
+  id              String   @id @default(cuid())
+  resellerId      String
+  orderId         String   @unique
+  productPrice    Int
+  stripeFees      Int
+  nuvraShare      Int // 10%
+  resellerShare   Int // 90%
+  netAmount       Int
+  status          String   @default("completed")
+  createdAt       DateTime @default(now())
+  reseller        Reseller @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+}
+
+model Commission {
+  id          String   @id @default(cuid())
+  userId      String
+  orderId     String?
+  amount      Int
+  type        String // reseller, affiliate, platform
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+}
+
+model Affiliate {
+  id              String   @id @default(cuid())
+  userId          String   @unique // creator who owns program
+  commissionRate  Float    @default(20) // percent
+  cookieDays      Int      @default(30)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clicks          AffiliateClick[]
+  sales           AffiliateSale[]
+}
+
+model AffiliateClick {
+  id          String   @id @default(cuid())
+  affiliateId String
+  userId      String? // affiliate user id if known? Actually click tracker
+  code        String
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id])
+}
+
+model AffiliateSale {
+  id          String   @id @default(cuid())
+  affiliateId String
+  orderId     String   @unique
+  code        String
+  commission  Int
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+}
+
+model EmailCampaign {
+  id          String      @id @default(cuid())
+  userId      String
+  name        String
+  subject     String
+  content     String
+  status      EmailStatus @default(DRAFT)
+  list        String? // JSON segment
+  sentCount   Int         @default(0)
+  openRate    Float?      @default(0)
+  clickRate   Float?      @default(0)
+  scheduledAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailSequence {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  trigger     String
+  steps       String // JSON
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Automation {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  triggerType AutomationTriggerType
+  triggerConfig String? // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actions     AutomationAction[]
+}
+
+model AutomationAction {
+  id           String               @id @default(cuid())
+  automationId String
+  type         AutomationActionType
+  config       String // JSON
+  position     Int     @default(0)
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String?
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Coupon {
+  id          String   @id @default(cuid())
+  userId      String
+  code        String   @unique
+  discountType String  @default("percent") // percent, fixed
+  discountValue Int
+  maxUses     Int?
+  usedCount   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model Payout {
+  id          String       @id @default(cuid())
+  userId      String
+  amount      Int
+  currency    String       @default("usd")
+  status      PayoutStatus @default(PENDING)
+  method      String? // stripe, bank
+  stripeId    String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  String? // JSON
+  ip        String?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  userId    String?
+  type      String // page_view, lead_created, checkout_started, etc
+  entityId  String?
+  metadata  String? // JSON
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model LedgerEntry {
+  id          String     @id @default(cuid())
+  userId      String?
+  orderId     String?
+  type        LedgerType
+  amount      Int
+  currency    String     @default("usd")
+  description String?
+  metadata    String? // JSON
+  createdAt   DateTime   @default(now())
+  user        User?      @relation(fields: [userId], references: [id])
+  order       Order?     @relation(fields: [orderId], references: [id])
+}
+
+model MarketplaceListing {
+  id          String   @id @default(cuid())
+  courseId    String   @unique
+  isApproved  Boolean  @default(false)
+  approvedAt  DateTime?
+  rejectionReason String?
+  featured    Boolean  @default(false)
+  views       Int      @default(0)
+  sales       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
