@@ -2,6 +2,17 @@
 // - If DATABASE_URL starts with postgres, uses PrismaClient (requires `prisma generate`)
 // - If DATABASE_URL starts with file: or is unset, uses custom SQLite via node:sqlite (Node 22+)
 
+// Suppress Node 22 experimental warning for node:sqlite (only in dev, not on Vercel prod)
+if (typeof process !== "undefined" && process.emitWarning) {
+  const originalEmitWarning = process.emitWarning;
+  (process as any).emitWarning = (warning: any, ...args: any[]) => {
+    if (typeof warning === "string" && warning.includes("SQLite is an experimental feature")) return;
+    if (warning?.message?.includes("SQLite is an experimental feature")) return;
+    if (warning?.name === "ExperimentalWarning" && String(warning).includes("SQLite")) return;
+    return (originalEmitWarning as any)(warning, ...args);
+  };
+}
+
 let prismaInstance: any = null;
 let isUsingPrisma = false;
 
