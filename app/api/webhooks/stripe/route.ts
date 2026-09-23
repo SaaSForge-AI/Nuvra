@@ -165,15 +165,31 @@ async function handleSuccessfulPayment(data: any) {
       });
     }
   } else {
-    // Creator 100% after fees
+    // Creator 95% / Nuvra 5% after fees - new model: platform free, 5% fee
     const rev = calculateCreatorRevenue(amount);
     await prisma.ledgerEntry.create({
       data: {
         userId: ownerId,
         orderId: order.id,
         type: "COMMISSION",
-        amount: rev.net,
-        description: "Creator revenue 100% after fees",
+        amount: rev.creatorShare,
+        description: `Creator revenue 95% after fees (${rev.breakdown})`,
+      },
+    });
+    await prisma.ledgerEntry.create({
+      data: {
+        orderId: order.id,
+        type: "COMMISSION",
+        amount: rev.nuvraShare,
+        description: "Nuvra platform fee 5%",
+      },
+    });
+    await prisma.ledgerEntry.create({
+      data: {
+        orderId: order.id,
+        type: "FEE",
+        amount: rev.stripeFees,
+        description: "Stripe fees",
       },
     });
   }

@@ -19,13 +19,13 @@ export default async function PaymentsPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div><h1 className="text-xl font-semibold">Payments</h1><p className="text-sm text-muted mt-1">Orders, ledger, payouts, Stripe integration</p></div>
+      <div><h1 className="text-xl font-semibold">Payments - Nouveau modèle 197$ + 5%</h1><p className="text-sm text-muted mt-1">Plateforme gratuite : 95% toi / 5% Nuvra. Formation 197$ : 90% revendeur / 10% Nuvra. Ledger transparent.</p></div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4"><p className="text-xs text-muted uppercase">Total Revenue</p><p className="text-xl font-semibold mt-1">{formatPrice(totalRevenue)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted uppercase">Net Earnings</p><p className="text-xl font-semibold mt-1 text-success">{formatPrice(totalCommission)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted uppercase">Fees</p><p className="text-xl font-semibold mt-1">{formatPrice(totalFees)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted uppercase">Payouts</p><p className="text-xl font-semibold mt-1">{payouts.length}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted uppercase">Revenu total</p><p className="text-xl font-semibold mt-1">{formatPrice(totalRevenue)}</p><p className="text-[11px] text-muted mt-1">197$ formation + ventes perso</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted uppercase">Net (95% / 90%)</p><p className="text-xl font-semibold mt-1 text-success">{formatPrice(totalCommission)}</p><p className="text-[11px] text-muted mt-1">Après frais Stripe + part Nuvra</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted uppercase">Frais Stripe</p><p className="text-xl font-semibold mt-1">{formatPrice(totalFees)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-xs text-muted uppercase">Payouts (14j)</p><p className="text-xl font-semibold mt-1">{payouts.length}</p></CardContent></Card>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

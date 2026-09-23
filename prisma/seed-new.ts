@@ -101,17 +101,17 @@ async function main() {
   await prisma.linkInBio.create({ data: { id: "lib-3", userId: student.id, username: "jordanstudent", displayName: "Jordan Student" } });
   await prisma.linkInBio.create({ data: { id: "lib-4", userId: admin.id, username: "admin", displayName: "Admin" } });
 
-  // Nuvra Academy Course
+  // Nuvra Academy Course - $197 new model, platform free for all (5% fee), 90% resell
   const nuvraAcademy = await prisma.course.create({
     data: {
       id: "course-nuvra-academy",
       userId: admin.id,
-      title: "Nuvra Academy - Create. Sell. Teach. Scale.",
-      description: "The complete system to build a digital business from 0 to 100k. 8 modules, 50+ lessons, templates, and resell rights 90%.",
-      shortDesc: "Complete system from 0 to 100k",
+      title: "Nuvra Academy - Create. Sell. Teach. Scale. - 197$ à vie",
+      description: "Le système complet pour créer un business digital de 0 à 100k. 8 modules, 50+ leçons, templates, et droit de revente 90%. Plateforme gratuite pour vendre tes produits (5% Nuvra).",
+      shortDesc: "Formation à 197$ une fois, accès à vie + revente 90%",
       category: "Business",
       level: "beginner",
-      price: 49700,
+      price: 19700,
       isFree: false,
       status: "PUBLISHED",
       slug: "nuvra-academy",
@@ -161,9 +161,10 @@ async function main() {
   await prisma.lesson.create({ data: { id: "lesson-creator-1", moduleId: mod1.id, title: "Welcome", description: "Intro", content: "Welcome to course", position: 0, isPublished: true, duration: 300 } });
   await prisma.marketplaceListing.create({ data: { id: "ml-2", courseId: creatorCourse.id, isApproved: true, approvedAt: new Date().toISOString() } });
 
-  // Products
-  await prisma.product.create({ data: { id: "prod-1", userId: creator.id, title: "Nuvra Academy Resell", description: "Resell rights", type: "NUVRA_ACADEMY_RESELL", price: 49700, slug: `nuvra-academy-resell-${Date.now()}`, isPublished: true } });
-  await prisma.product.create({ data: { id: "prod-2", userId: creator.id, title: "Funnel Template Pack", description: "10 high-converting templates", type: "TEMPLATE", price: 4900, slug: `funnel-templates-${Date.now()}`, isPublished: true } });
+  // Products - new model: free platform, 5% fee on creator sales, 197$ academy
+  await prisma.product.create({ data: { id: "prod-1", userId: creator.id, title: "Nuvra Academy - 197$ Lifetime", description: "Accès à vie + droit revente 90%", type: "NUVRA_ACADEMY_RESELL", price: 19700, slug: `nuvra-academy-resell-${Date.now()}`, isPublished: true } });
+  await prisma.product.create({ data: { id: "prod-2", userId: creator.id, title: "Funnel Template Pack", description: "10 high-converting templates - 95% toi / 5% Nuvra", type: "TEMPLATE", price: 4900, slug: `funnel-templates-${Date.now()}`, isPublished: true } });
+  await prisma.product.create({ data: { id: "prod-3", userId: creator.id, title: "Ebook - 0 à 10k", description: "Guide complet - plateforme gratuite, 5% Nuvra", type: "EBOOK", price: 2900, slug: `ebook-10k-${Date.now()}`, isPublished: true } });
 
   // Funnels
   const funnel = await prisma.funnel.create({ data: { id: "funnel-1", userId: creator.id, name: "Main Sales Funnel", description: "Primary funnel", slug: `main-funnel-${Date.now()}`, isPublished: true } });
@@ -180,29 +181,41 @@ async function main() {
   await prisma.lead.create({ data: { id: "lead-1", userId: creator.id, email: "lead1@example.com", firstName: "Lead", lastName: "One", source: "Landing Page", status: "lead" } });
   await prisma.lead.create({ data: { id: "lead-2", userId: creator.id, email: "lead2@example.com", firstName: "Lead", lastName: "Two", source: "Instagram", status: "lead" } });
 
-  await prisma.customer.create({ data: { id: "cust-1", userId: creator.id, email: "customer1@example.com", firstName: "Customer", lastName: "One", totalSpent: 49700, ordersCount: 1, source: "Funnel" } });
+  await prisma.customer.create({ data: { id: "cust-1", userId: creator.id, email: "customer1@example.com", firstName: "Customer", lastName: "One", totalSpent: 19700, ordersCount: 1, source: "Funnel" } });
   await prisma.customer.create({ data: { id: "cust-2", userId: creator.id, email: "customer2@example.com", firstName: "Customer", lastName: "Two", totalSpent: 9900, ordersCount: 1 } });
 
-  // Reseller
-  const reseller = await prisma.reseller.create({ data: { id: "reseller-1", userId: resellerUser.id, status: "ACTIVE", activatedAt: new Date().toISOString(), customSlug: "samreseller", totalSales: 2, totalRevenue: 99400, totalCommission: 86000 } });
+  // Reseller - 197$ model
+  const reseller = await prisma.reseller.create({ data: { id: "reseller-1", userId: resellerUser.id, status: "ACTIVE", activatedAt: new Date().toISOString(), customSlug: "samreseller", totalSales: 3, totalRevenue: 59100, totalCommission: 48000 } });
 
-  // Orders
-  const order1 = await prisma.order.create({ data: { id: "order-1", userId: student.id, ownerId: admin.id, total: 49700, subtotal: 49700, status: "PAID", stripeSessionId: "cs_mock_1" } });
-  await prisma.payment.create({ data: { id: "pay-1", orderId: order1.id, amount: 49700, status: "SUCCEEDED", stripeId: "pi_mock_1" } });
-  await prisma.ledgerEntry.create({ data: { id: "ledger-1", userId: admin.id, orderId: order1.id, type: "SALE", amount: 49700, description: "Nuvra Academy sale" } });
+  // Orders - new model: 197$ academy + 5% platform fee on creator sales
+  const order1 = await prisma.order.create({ data: { id: "order-1", userId: student.id, ownerId: admin.id, total: 19700, subtotal: 19700, status: "PAID", stripeSessionId: "cs_mock_1" } });
+  await prisma.payment.create({ data: { id: "pay-1", orderId: order1.id, amount: 19700, status: "SUCCEEDED", stripeId: "pi_mock_1" } });
+  await prisma.ledgerEntry.create({ data: { id: "ledger-1", userId: admin.id, orderId: order1.id, type: "SALE", amount: 19700, description: "Nuvra Academy 197$ sale" } });
 
-  // Reseller sale - 90/10
-  const splitPrice = 49700;
-  const stripeFees = Math.round(splitPrice * 0.029 + 30);
+  // Reseller sale - 90/10 at 197$
+  const splitPrice = 19700;
+  const stripeFees = Math.round(splitPrice * 0.029 + 30); // ~601
   const afterFees = splitPrice - stripeFees;
   const nuvraShare = Math.round(afterFees * 0.10);
   const resellerShare = afterFees - nuvraShare;
 
   const order2 = await prisma.order.create({ data: { id: "order-2", userId: student.id, ownerId: admin.id, total: splitPrice, subtotal: splitPrice, status: "PAID", stripeSessionId: "cs_mock_reseller" } });
   await prisma.resellerSale.create({ data: { id: "rs-1", resellerId: reseller.id, orderId: order2.id, productPrice: splitPrice, stripeFees, nuvraShare, resellerShare, netAmount: resellerShare } });
-  await prisma.ledgerEntry.create({ data: { id: "ledger-2", userId: resellerUser.id, orderId: order2.id, type: "COMMISSION", amount: resellerShare, description: "90% reseller commission" } });
+  await prisma.ledgerEntry.create({ data: { id: "ledger-2", userId: resellerUser.id, orderId: order2.id, type: "COMMISSION", amount: resellerShare, description: "90% reseller commission 197$" } });
   await prisma.ledgerEntry.create({ data: { id: "ledger-3", orderId: order2.id, type: "FEE", amount: stripeFees, description: "Stripe fees" } });
-  await prisma.ledgerEntry.create({ data: { id: "ledger-4", orderId: order2.id, type: "COMMISSION", amount: nuvraShare, description: "Nuvra 10%" } });
+  await prisma.ledgerEntry.create({ data: { id: "ledger-4", orderId: order2.id, type: "COMMISSION", amount: nuvraShare, description: "Nuvra 10% Academy" } });
+
+  // Creator sale - 95% / 5% platform fee
+  const creatorPrice = 9900;
+  const creatorStripeFees = Math.round(creatorPrice * 0.029 + 30);
+  const creatorAfterFees = creatorPrice - creatorStripeFees;
+  const creatorNuvraShare = Math.round(creatorAfterFees * 0.05);
+  const creatorNet = creatorAfterFees - creatorNuvraShare;
+  const order3 = await prisma.order.create({ data: { id: "order-3", userId: student.id, ownerId: creator.id, total: creatorPrice, subtotal: creatorPrice, status: "PAID", stripeSessionId: "cs_mock_creator" } });
+  await prisma.payment.create({ data: { id: "pay-3", orderId: order3.id, amount: creatorPrice, status: "SUCCEEDED", stripeId: "pi_mock_3" } });
+  await prisma.ledgerEntry.create({ data: { id: "ledger-5", userId: creator.id, orderId: order3.id, type: "SALE", amount: creatorPrice, description: "Creator product sale" } });
+  await prisma.ledgerEntry.create({ data: { id: "ledger-6", userId: creator.id, orderId: order3.id, type: "COMMISSION", amount: creatorNet, description: "Creator 95% after fees" } });
+  await prisma.ledgerEntry.create({ data: { id: "ledger-7", orderId: order3.id, type: "COMMISSION", amount: creatorNuvraShare, description: "Nuvra 5% platform fee" } });
 
   // Enrollment
   await prisma.enrollment.create({ data: { id: "enr-1", userId: student.id, courseId: nuvraAcademy.id, progress: 0.24 } });
@@ -228,7 +241,8 @@ async function main() {
   await prisma.event.create({ data: { id: "ev-4", userId: creator.id, type: "purchase_completed" } });
 
   // Notifications
-  await prisma.notification.create({ data: { id: "notif-1", userId: creator.id, type: "NEW_SALE", title: "New sale! 💰", message: "You made a sale of $497" } });
+  await prisma.notification.create({ data: { id: "notif-1", userId: creator.id, type: "NEW_SALE", title: "New sale! 💰", message: "You made a sale of $197 - 90% = $171.89 net" } });
+  await prisma.notification.create({ data: { id: "notif-2", userId: creator.id, type: "NEW_SALE", title: "New creator sale! 💰", message: "You made a sale of $99 - 95% = $89 net (5% Nuvra)" } });
 
   // Email campaign
   await prisma.emailCampaign.create({ data: { id: "ec-1", userId: creator.id, name: "Welcome Broadcast", subject: "Welcome to my list", content: "Hello!", status: "SENT", sentCount: 120 } });

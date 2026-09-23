@@ -27,16 +27,19 @@ export default async function DashboardPage() {
 
   const revenue = orders.reduce((sum, o) => sum + o.total, 0);
   const sales = orders.length;
-  const conversion = 3.2; // placeholder calc
+  const conversion = 3.2;
   const visitors = events || 1240;
 
-  // Opportunities
+  // Opportunities - updated for new model: free platform 5%, academy 197$ 90%
   const opportunities = [];
-  if (conversion < 5) opportunities.push({ title: "Your checkout converts at 3.2%. Consider testing a shorter checkout.", type: "conversion" });
-  if (productsCount === 0) opportunities.push({ title: "You haven't created your first product yet. Start with a simple template.", type: "product" });
-  if (funnelsCount === 0) opportunities.push({ title: "Create your first funnel to start capturing leads.", type: "funnel" });
-  if (leadsCount > 0 && customersCount === 0) opportunities.push({ title: `You have ${leadsCount} leads but no customers yet. Send a nurture sequence.`, type: "email" });
-  if (opportunities.length === 0) opportunities.push({ title: "Your metrics look healthy. Consider launching an upsell to increase AOV.", type: "growth" });
+  if (conversion < 5) opportunities.push({ title: "Ton checkout convertit à 3.2%. Teste un checkout plus court pour augmenter conversion.", type: "conversion" });
+  if (productsCount === 0) opportunities.push({ title: "Tu n'as pas encore créé de produit. Plateforme gratuite : crée ton 1er produit et garde 95% (5% Nuvra).", type: "product" });
+  if (funnelsCount === 0) opportunities.push({ title: "Crée ton 1er funnel pour capturer des leads et vendre. Gratuit, 95% pour toi.", type: "funnel" });
+  if (leadsCount > 0 && customersCount === 0) opportunities.push({ title: `Tu as ${leadsCount} leads mais pas de clients. Envoie une séquence nurturing.`, type: "email" });
+  const hasAcademy = await prisma.course.findFirst({ where: { isNuvraAcademy: true } });
+  const hasAcademyEnrollment = hasAcademy ? await prisma.enrollment.findFirst({ where: { userId: user.id, courseId: hasAcademy.id } }) : null;
+  if (!hasAcademyEnrollment) opportunities.push({ title: "Achète Nuvra Academy à 197$ une fois → accès à vie + droit de revente à 90% (~172$ net par vente).", type: "resell" });
+  if (opportunities.length === 0) opportunities.push({ title: "Tes métriques sont bonnes. Lance un upsell pour augmenter AOV. Tu gardes 95% sur tes produits perso.", type: "growth" });
 
   // Checklist
   const checklist = [

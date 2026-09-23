@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Zap, GraduationCap, BarChart3, Users, Mail, GitBranch, Store, Link2, Shield, Sparkles } from "lucide-react";
+import { ArrowRight, GraduationCap, BarChart3, Users, Mail, GitBranch, Store, Link2, Shield, Sparkles, Check } from "lucide-react";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-white">
-      {/* Minimal top nav - not a classic header, more like a floating pill */}
+      {/* Minimal top nav - floating pill */}
       <div className="sticky top-0 z-50 flex justify-center pt-6 px-4">
         <div className="flex items-center gap-8 rounded-full border border-border bg-surface/80 backdrop-blur-xl px-6 py-3 shadow-soft">
           <div className="flex items-center gap-2">
@@ -31,7 +31,7 @@ export default function LandingPage() {
       <section className="mx-auto max-w-6xl px-6 pt-24 pb-16 text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accentMuted px-3 py-1 text-[12px] text-accent mb-8">
           <Sparkles className="h-3.5 w-3.5" />
-          All-in-one platform for creators
+          Plateforme gratuite + Formation à 197$
         </div>
         <h1 className="text-5xl md:text-7xl font-semibold tracking-tight leading-[0.95] mb-6">
           Create. Sell.
@@ -39,17 +39,17 @@ export default function LandingPage() {
           <span className="text-accent">Teach. Scale.</span>
         </h1>
         <p className="mx-auto max-w-2xl text-[17px] leading-relaxed text-muted mb-10">
-          Nuvra replaces 12 tools with one. Build funnels, launch courses, sell products, automate emails, and grow your audience — from a single dashboard.
+          Nuvra est gratuit pour vendre tes produits digitaux. On prend seulement 5%. Achète la formation Nuvra à <span className="text-white font-medium">197$</span> une fois, accède à vie, et revends-la en gardant 90%.
         </p>
         <div className="flex items-center justify-center gap-4">
           <Link href="/register">
             <Button size="lg" className="rounded-full px-8">
-              Start for free <ArrowRight className="ml-2 h-4 w-4" />
+              Commencer gratuitement <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/marketplace">
+          <Link href="#pricing">
             <Button variant="outline" size="lg" className="rounded-full px-8">
-              Explore Nuvra
+              Voir l'offre à 197$
             </Button>
           </Link>
         </div>
@@ -92,20 +92,20 @@ export default function LandingPage() {
       {/* Features */}
       <section id="platform" className="mx-auto max-w-6xl px-6 py-24">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Everything you need, in one place</h2>
-          <p className="text-muted max-w-2xl mx-auto">Stop stitching tools together. Nuvra gives you a coherent system that actually works together.</p>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Plateforme gratuite, business model transparent</h2>
+          <p className="text-muted max-w-2xl mx-auto">Pas d'abonnement caché. Tu vends, on prend 5%. Tu achètes la formation à 197$ une fois, tu peux la revendre à vie avec 90% pour toi.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            { icon: GitBranch, title: "Funnel Builder", desc: "Visual flow builder with conversion tracking between steps." },
-            { icon: Store, title: "Digital Store", desc: "Sell courses, ebooks, templates, coaching in one checkout." },
-            { icon: GraduationCap, title: "LMS & Academy", desc: "Nuvra Academy + your own courses with certificates." },
-            { icon: Users, title: "CRM", desc: "Leads, customers, segments, tags - all integrated." },
-            { icon: Mail, title: "Email & Automations", desc: "Broadcasts, sequences, workflows triggered by events." },
-            { icon: BarChart3, title: "Analytics", desc: "Revenue, conversion, funnel performance - proprietary tracking." },
-            { icon: Link2, title: "Link in Bio", desc: "Your /@username page with products and funnels." },
-            { icon: Users, title: "Affiliates & Resell", desc: "90% for resellers of Nuvra Academy. Your own affiliate program." },
-            { icon: Shield, title: "Payments", desc: "Stripe + Connect, ledger, payouts, refunds, tax-ready." },
+            { icon: Store, title: "Vends gratuitement", desc: "Plateforme gratuite pour tous. 95% pour toi, 5% pour Nuvra après frais Stripe. Pas d'abonnement." },
+            { icon: GraduationCap, title: "Formation à 197$", desc: "Nuvra Academy complète : 8 modules, 50+ leçons. Accès à vie. Droit de revente inclus." },
+            { icon: Users, title: "Revends à 90%", desc: "Tu achètes à 197$, tu revends à 197$, tu gardes 90% (~167$ net). Nuvra 10%. Frais Stripe transparents." },
+            { icon: GitBranch, title: "Funnel Builder", desc: "Landing, capture, sales, checkout, thank you. Conversion tracking entre étapes." },
+            { icon: Mail, title: "CRM + Emails + Automations", desc: "Leads, customers, broadcasts, séquences, workflows. Tout intégré." },
+            { icon: BarChart3, title: "Analytics + Ledger", desc: "Revenu, conversion, ledger immuable, payouts 14j, refunds recalcul auto." },
+            { icon: Link2, title: "Link in Bio", desc: "Ta page /@username avec produits, formations, newsletter." },
+            { icon: Shield, title: "Paiements Stripe", desc: "Checkout propre, Apple/Google Pay, coupons, taxes, Connect ready." },
+            { icon: Users, title: "Marketplace", desc: "Publie tes formations, vends via marketplace. 95% pour toi." },
           ].map((f) => (
             <Card key={f.title} className="p-6 hover:border-accent/20 transition-colors group">
               <div className="h-10 w-10 rounded-xl bg-surface3 border border-border flex items-center justify-center mb-4 group-hover:bg-accentMuted group-hover:border-accent/20 transition-colors">
@@ -124,19 +124,19 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface2 px-3 py-1 text-[12px] mb-6">
-                <GraduationCap className="h-3.5 w-3.5" /> Nuvra Academy Included
+                <GraduationCap className="h-3.5 w-3.5" /> Nuvra Academy - 197$ une fois
               </div>
-              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Learn to build a real digital business</h2>
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">Achète une fois, revends à vie</h2>
               <p className="text-muted leading-relaxed mb-8">
-                8 modules, 50+ lessons, built directly into Nuvra. From finding your offer to scaling. Real content, not fluff. Plus, resell it and keep 90%.
+                Pas d'abonnement. 197$ = formation complète + accès plateforme à vie + droit de revente. La plateforme reste gratuite pour vendre tes propres produits (5% Nuvra).
               </p>
               <div className="space-y-3 mb-8">
                 {[
-                  "Module 1: Ecosystem & Value Prop",
-                  "Module 2: Offer & Pricing",
-                  "Module 3: Funnels",
-                  "Module 4: Course Creation",
-                  "Module 5-8: Acquisition, Conversion, Automation, Growth",
+                  "8 modules, 50+ leçons - contenu réel, pas du fluff",
+                  "Accès plateforme gratuit à vie pour vendre tes produits",
+                  "Droit de revente : tu gardes 90% sur chaque vente à 197$",
+                  "Payouts 14j, ledger transparent, refunds recalcul auto",
+                  "Plateforme : funnels, pages, CRM, emails, automations, analytics",
                 ].map((m) => (
                   <div key={m} className="flex items-center gap-3 text-sm">
                     <div className="h-5 w-5 rounded-full bg-success/20 flex items-center justify-center">
@@ -146,52 +146,90 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
-              <Link href="/register"><Button className="rounded-full">Start learning now</Button></Link>
+              <Link href="/register"><Button className="rounded-full">Commencer gratuitement</Button></Link>
             </div>
             <Card className="p-2">
               <div className="rounded-xl bg-background p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Resell Nuvra Academy</h4>
-                  <span className="text-xs px-2 py-1 rounded-full bg-success/20 text-success">90% commission</span>
+                  <h4 className="font-medium">Modèle 197$ - Transparent</h4>
+                  <span className="text-xs px-2 py-1 rounded-full bg-success/20 text-success">90% pour toi</span>
                 </div>
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between"><span className="text-muted">Sale Price</span><span>$497.00</span></div>
-                  <div className="flex justify-between"><span className="text-muted">Stripe Fees (2.9% + 30c)</span><span className="text-muted">-$14.71</span></div>
-                  <div className="flex justify-between"><span className="text-muted">Nuvra Share (10%)</span><span className="text-muted">-$48.23</span></div>
+                  <div className="flex justify-between"><span className="text-muted">Prix formation</span><span className="font-medium">$197.00</span></div>
+                  <div className="flex justify-between"><span className="text-muted">Frais Stripe (2.9% + 30c)</span><span className="text-muted">-$6.01</span></div>
+                  <div className="flex justify-between"><span className="text-muted">Après frais</span><span>$190.99</span></div>
                   <div className="h-px bg-border" />
-                  <div className="flex justify-between font-medium"><span>Your Net</span><span className="text-success">$434.06</span></div>
+                  <div className="flex justify-between"><span className="text-muted">Nuvra 10%</span><span className="text-muted">-$19.10</span></div>
+                  <div className="flex justify-between font-semibold text-success"><span>Ton net (90%)</span><span>$171.89</span></div>
+                  <div className="h-px bg-border" />
+                  <div className="pt-2">
+                    <p className="text-xs font-medium mb-1">Et pour tes propres produits :</p>
+                    <div className="flex justify-between text-xs"><span className="text-muted">Vente à 100$ → 95$ toi / 5$ Nuvra après frais</span></div>
+                  </div>
                 </div>
+                <p className="text-[11px] text-muted">Plateforme gratuite pour tous. 197$ débloque formation + droit revente. Pas d'abonnement mensuel.</p>
               </div>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Pricing - NEW MODEL */}
       <section id="pricing" className="mx-auto max-w-6xl px-6 py-24">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-semibold mb-4">Simple pricing, built to scale</h2>
-          <p className="text-muted">Start free, upgrade when you grow. No hidden fees.</p>
+          <h2 className="text-3xl md:text-4xl font-semibold mb-4">Un seul prix. Pas d'abonnement.</h2>
+          <p className="text-muted">Gratuit pour vendre. 197$ pour apprendre et revendre.</p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {[
-            { name: "Free", price: "$0", desc: "For exploring Nuvra", features: ["1 product", "1 funnel", "100 leads", "Nuvra Academy preview", "Community access"] },
-            { name: "Pro", price: "$49", desc: "For creators starting to sell", features: ["Unlimited products", "Unlimited funnels", "5,000 leads", "Full Academy", "Email marketing", "Reseller program"], popular: true },
-            { name: "Business", price: "$149", desc: "For scaling businesses", features: ["Everything in Pro", "50,000 leads", "Affiliate program", "Priority support", "Custom domain", "Advanced analytics"] },
-          ].map((tier) => (
-            <Card key={tier.name} className={`p-6 ${tier.popular ? "border-accent/30 shadow-glow" : ""}`}>
-              {tier.popular && <div className="inline-flex text-[11px] px-2 py-1 rounded-full bg-accent text-white mb-4">Most Popular</div>}
-              <h3 className="text-lg font-semibold mb-1">{tier.name}</h3>
-              <p className="text-sm text-muted mb-4">{tier.desc}</p>
-              <div className="flex items-baseline gap-1 mb-6"><span className="text-3xl font-semibold">{tier.price}</span><span className="text-muted text-sm">/month</span></div>
-              <div className="space-y-3 mb-8">
-                {tier.features.map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-sm"><div className="h-1 w-1 rounded-full bg-muted" /><span className="text-muted">{f}</span></div>
-                ))}
-              </div>
-              <Button variant={tier.popular ? "default" : "outline"} className="w-full rounded-full">{tier.price === "$0" ? "Start free" : "Get started"}</Button>
-            </Card>
-          ))}
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <Card className="p-8 border-border">
+            <h3 className="text-lg font-semibold mb-1">Gratuit</h3>
+            <p className="text-sm text-muted mb-4">Pour vendre tes produits digitaux</p>
+            <div className="flex items-baseline gap-1 mb-6"><span className="text-3xl font-semibold">$0</span><span className="text-muted text-sm">/toujours</span></div>
+            <div className="space-y-3 mb-8">
+              {[
+                "Plateforme complète gratuite",
+                "Produits illimités",
+                "Funnels illimités",
+                "Pages illimitées",
+                "CRM, emails, automations",
+                "Link in bio /@username",
+                "Marketplace",
+                "95% pour toi / 5% Nuvra après frais Stripe",
+              ].map((f) => (
+                <div key={f} className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-success" /><span className="text-muted">{f}</span></div>
+              ))}
+            </div>
+            <Link href="/register"><Button variant="outline" className="w-full rounded-full">Commencer gratuitement</Button></Link>
+          </Card>
+
+          <Card className="p-8 border-accent/30 shadow-glow relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex text-[11px] px-3 py-1 rounded-full bg-accent text-white">Recommandé</div>
+            <h3 className="text-lg font-semibold mb-1">Nuvra Academy</h3>
+            <p className="text-sm text-muted mb-4">Formation + droit de revente à vie</p>
+            <div className="flex items-baseline gap-1 mb-6"><span className="text-3xl font-semibold">$197</span><span className="text-muted text-sm">/une fois, à vie</span></div>
+            <div className="space-y-3 mb-8">
+              {[
+                "Tout du gratuit inclus",
+                "Formation complète 8 modules, 50+ leçons",
+                "Accès à vie + mises à jour",
+                "Droit de revente : 90% pour toi",
+                "Page de vente personnalisable",
+                "Dashboard revendeur + payouts 14j",
+                "Certificat + support",
+                "Idéal pour démarrer sans créer de produit",
+              ].map((f) => (
+                <div key={f} className="flex items-center gap-2 text-sm"><Check className="h-4 w-4 text-success" /><span className="text-white">{f}</span></div>
+              ))}
+            </div>
+            <Link href="/register"><Button className="w-full rounded-full">Acheter à 197$ et revendre</Button></Link>
+            <p className="text-[11px] text-muted text-center mt-3">Paiement unique, pas d'abonnement. 30j garantie.</p>
+          </Card>
+        </div>
+
+        <div className="max-w-4xl mx-auto mt-8 p-4 rounded-2xl bg-surface2 border border-border text-center">
+          <p className="text-xs text-muted">
+            <span className="text-white font-medium">Modèle transparent :</span> Plateforme gratuite → 5% Nuvra sur tes ventes perso. Formation 197$ → 90% toi / 10% Nuvra après frais Stripe (2.9%+30c). Refunds recalculent auto. Payouts dispo après 14j.
+          </p>
         </div>
       </section>
 
@@ -203,7 +241,7 @@ export default function LandingPage() {
               <div className="h-7 w-7 rounded-lg bg-accent flex items-center justify-center font-bold text-sm">N</div>
               <span className="font-semibold">NUVRA</span>
             </div>
-            <p className="text-sm text-muted max-w-xs">Create. Sell. Teach. Scale. The all-in-one platform for creators and entrepreneurs.</p>
+            <p className="text-sm text-muted max-w-xs">Plateforme gratuite + formation à 197$. 95% pour toi sur tes ventes, 90% sur revente Academy.</p>
           </div>
           <div className="grid grid-cols-3 gap-12 text-sm">
             <div><p className="font-medium mb-3">Product</p><div className="space-y-2 text-muted"><a href="#" className="block hover:text-white">Features</a><a href="#" className="block hover:text-white">Academy</a><a href="#" className="block hover:text-white">Pricing</a></div></div>
@@ -213,7 +251,7 @@ export default function LandingPage() {
         </div>
         <div className="mx-auto max-w-6xl px-6 mt-12 pt-8 border-t border-border flex justify-between text-xs text-muted">
           <span>© 2026 Nuvra, Inc. All rights reserved.</span>
-          <span>Built for creators, by creators.</span>
+          <span>197$ une fois, pas d'abonnement.</span>
         </div>
       </footer>
     </div>

@@ -2,37 +2,50 @@ import { describe, it, expect } from "vitest";
 import { calculateResellerSplit, calculateCreatorRevenue, slugify, formatPrice } from "../lib/utils";
 import bcrypt from "bcryptjs";
 
-describe("Nuvra Critical Business Logic", () => {
-  it("should calculate 90/10 reseller split correctly", () => {
-    const price = 49700; // $497
+describe("Nuvra Critical Business Logic - New Model 197$ + 5%", () => {
+  it("should calculate 90/10 reseller split correctly at 197$", () => {
+    const price = 19700; // $197 new model
     const split = calculateResellerSplit(price);
     
-    // Stripe fees: 49700 * 0.029 + 30 = 1441.3 + 30 = 1471.3 -> 1471
-    expect(split.stripeFees).toBe(1471);
-    expect(split.afterFees).toBe(49700 - 1471);
-    expect(split.nuvraShare).toBe(Math.round((49700 - 1471) * 0.10));
-    expect(split.resellerShare).toBe((49700 - 1471) - Math.round((49700 - 1471) * 0.10));
+    // Stripe fees: 19700 * 0.029 + 30 = 571.3 + 30 = 601.3 -> 601
+    expect(split.stripeFees).toBe(601);
+    expect(split.afterFees).toBe(19700 - 601);
+    expect(split.nuvraShare).toBe(Math.round((19700 - 601) * 0.10));
+    expect(split.resellerShare).toBe((19700 - 601) - Math.round((19700 - 601) * 0.10));
     expect(split.price).toBe(price);
     expect(split.resellerShare + split.nuvraShare + split.stripeFees).toBe(price);
+    // Net should be ~17189 cents = $171.89
+    expect(split.resellerShare).toBe(17189);
   });
 
   it("should handle refund recalculation 90/10", () => {
-    const price = 49700;
+    const price = 19700;
     const split = calculateResellerSplit(price);
-    // Refund should recalculate same split
-    const refundAmount = price;
-    const refundSplit = calculateResellerSplit(refundAmount);
+    const refundSplit = calculateResellerSplit(price);
     expect(refundSplit.resellerShare).toBe(split.resellerShare);
     expect(refundSplit.nuvraShare).toBe(split.nuvraShare);
   });
 
-  it("should calculate creator revenue 100% after fees", () => {
+  it("should calculate creator revenue 95% / 5% Nuvra after fees", () => {
     const price = 9900; // $99
     const rev = calculateCreatorRevenue(price);
-    const expectedFees = Math.round(price * 0.029 + 30);
+    const expectedFees = Math.round(price * 0.029 + 30); // 317
+    const afterFees = price - expectedFees; // 9583
+    const expectedNuvra = Math.round(afterFees * 0.05); // 479
+    const expectedCreator = afterFees - expectedNuvra; // 9104
     expect(rev.stripeFees).toBe(expectedFees);
-    expect(rev.net).toBe(price - expectedFees);
-    expect(rev.creatorShare).toBe(price - expectedFees);
+    expect(rev.afterFees).toBe(afterFees);
+    expect(rev.nuvraShare).toBe(expectedNuvra);
+    expect(rev.creatorShare).toBe(expectedCreator);
+    expect(rev.net).toBe(expectedCreator);
+  });
+
+  it("should calculate platform fee for free access model", () => {
+    // Platform free for all, 5% fee on creator sales
+    const price = 10000; // $100
+    const rev = calculateCreatorRevenue(price);
+    expect(rev.creatorShare).toBeGreaterThan(rev.nuvraShare);
+    expect(rev.nuvraShare).toBe(Math.round(rev.afterFees * 0.05));
   });
 
   it("should hash and verify passwords", async () => {
