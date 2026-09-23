@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashPassword, createToken, setSessionCookie } from "@/lib/auth";
 import { slugify } from "@/lib/utils";
+import { readJsonBody, serverErrorResponse } from "@/lib/api-errors";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { email, password, firstName, lastName } = body;
+    const body = (await readJsonBody<any>(req)) || {};
+    const email = typeof body.email === "string" ? body.email.trim() : "";
+    const { password, firstName, lastName } = body;
 
     if (!email || !password || !firstName || !lastName) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -87,7 +89,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, userId: user.id });
   } catch (e: any) {
-    console.error(e);
-    return NextResponse.json({ error: e.message || "Registration failed" }, { status: 500 });
+    return serverErrorResponse(e, "Registration failed");
   }
 }
