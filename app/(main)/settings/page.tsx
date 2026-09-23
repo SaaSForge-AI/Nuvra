@@ -11,12 +11,17 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("/api/me").then(r => r.json()).then(d => {
-      if (d.user) {
-        setUser(d.user);
-        setForm({ name: d.user.name || "", bio: d.user.bio || "", customSlug: d.user.customSlug || "", email: d.user.email || "" });
-      }
-    });
+    fetch("/api/me")
+      .then(async r => {
+        const text = await r.text();
+        try { return JSON.parse(text); } catch { console.error("Non-JSON /api/me:", text.slice(0,200)); return {}; }
+      })
+      .then(d => {
+        if (d.user) {
+          setUser(d.user);
+          setForm({ name: d.user.name || "", bio: d.user.bio || "", customSlug: d.user.customSlug || "", email: d.user.email || "" });
+        }
+      }).catch(()=>{});
   }, []);
 
   const save = async () => {

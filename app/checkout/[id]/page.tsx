@@ -17,22 +17,38 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/products/${id}`).then((r) => r.json()).then(setProduct).catch(() => {
-      fetch(`/api/courses/${id}`).then((r) => r.json()).then(setProduct);
+    const safeFetch = async (url: string) => {
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        try { return JSON.parse(text); } catch { return null; }
+      } catch { return null; }
+    };
+    safeFetch(`/api/products/${id}`).then(d => {
+      if (d) setProduct(d);
+      else safeFetch(`/api/courses/${id}`).then(d2 => { if (d2) setProduct(d2); });
     });
   }, [id]);
 
   async function handleCheckout() {
     setLoading(true);
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId: id, courseId: id, resellerCode: reseller, customerEmail: email }),
-    });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else if (data.free) window.location.href = "/learn";
-    setLoading(false);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: id, courseId: id, resellerCode: reseller, customerEmail: email }),
+      });
+      const text = await res.text();
+      let data: any;
+      try { data = JSON.parse(text); } catch { throw new Error("Erreur serveur - DB manquante?"); }
+      if (data.url) window.location.href = data.url;
+      else if (data.free) window.location.href = "/learn";
+      else if (data.error) alert(data.error);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

@@ -24,12 +24,19 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const text = await res.text();
+      let data: any;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error("Non-JSON login response:", text.slice(0,300));
+        throw new Error(text.includes("<!DOCTYPE") ? "Erreur serveur - DB non configurée sur Vercel. Vérifie DATABASE_URL et redéploie. (Erreur <!DOCTYPE>)" : "Erreur serveur - réponse invalide");
+      }
+      if (!res.ok) throw new Error(data.error || "Login failed");
       if (!data.onboardingDone) router.push("/onboarding");
       else router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Erreur inattendue");
     } finally {
       setLoading(false);
     }

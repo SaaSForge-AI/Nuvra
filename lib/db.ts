@@ -38,6 +38,29 @@ if (isPostgresUrl(dbUrl)) {
 }
 
 if (!prismaInstance) {
+  // If we are on Vercel and no postgres URL, we must fail clearly - Vercel FS is read-only
+  if (process.env.VERCEL && !isPostgresUrl(dbUrl)) {
+    console.error("[DB] VERCEL detected but DATABASE_URL is not postgres. Set DATABASE_URL to a Postgres URL (Neon/Supabase) in Vercel env vars.");
+    // Create a mock that throws helpful JSON errors instead of crashing with HTML
+    const errorMock = new Proxy({}, {
+      get(_target, prop) {
+        if (prop === "$disconnect") return async () => {};
+        return () => {
+          throw new Error("DATABASE_URL manquant sur Vercel. Va dans Vercel > Settings > Environment Variables > ajoute DATABASE_URL (postgres://...) puis Redeploy. Sans ça, l'API renvoie du HTML et tu vois <!DOCTYPE> error.");
+        };
+      }
+    });
+    // Create full mock with all tables
+    const tables = ["User","Profile","Workspace","WorkspaceMembership","Product","ProductPrice","Course","CourseModule","Lesson","Quiz","QuizQuestion","QuizAnswer","Enrollment","Progress","Certificate","Funnel","FunnelStep","Page","PageBlock","LinkInBio","Lead","Customer","Order","OrderItem","Payment","Refund","Reseller","ResellerSale","Commission","Affiliate","AffiliateClick","AffiliateSale","EmailCampaign","EmailSequence","Automation","AutomationAction","Notification","Coupon","Payout","AuditLog","Event","LedgerEntry","MarketplaceListing","Review"];
+    const mockObj: any = { $disconnect: async () => {} };
+    for (const t of tables) {
+      const lower = t.charAt(0).toLowerCase() + t.slice(1);
+      mockObj[lower] = errorMock;
+      mockObj[t] = errorMock;
+    }
+    mockObj.order = errorMock;
+    prismaInstance = mockObj;
+  } else {
   // SQLite fallback for dev
   console.log("[DB] Using custom SQLite layer (node:sqlite) - dev mode");
   
@@ -1011,7 +1034,8 @@ CREATE TABLE IF NOT EXISTS Review (
   }
 
   prismaInstance = createPrismaMock();
-}
+  } // end else local sqlite
+} // end if !prismaInstance
 
 export const prisma = prismaInstance;
 export default prisma;

@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, onboardingDone: user.onboardingDone });
   } catch (e: any) {
     console.error(e);
-    return NextResponse.json({ error: "Login failed" }, { status: 500 });
+    const msg = e.message?.includes("DATABASE_URL") ? e.message : "Login failed - vérifie logs Vercel. Si <!DOCTYPE> avant, c'était DB manquante, maintenant fixé.";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

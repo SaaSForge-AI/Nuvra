@@ -23,8 +23,12 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const text = await res.text();
+      let data: any;
+      try { data = JSON.parse(text); } catch {
+        throw new Error(text.includes("<!DOCTYPE") ? "Erreur serveur - DB non configurée. Vérifie DATABASE_URL sur Vercel." : "Erreur serveur");
+      }
+      if (!res.ok) throw new Error(data.error || "Register failed");
       router.push("/onboarding");
     } catch (err: any) {
       setError(err.message);

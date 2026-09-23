@@ -128,7 +128,11 @@ export function PayoutButton() {
     setLoading(true);
     try {
       const res = await fetch(`/api/payouts`, { method: "POST" });
-      const data = await res.json();
+      const text = await res.text();
+      let data: any;
+      try { data = JSON.parse(text); } catch {
+        throw new Error(text.includes("<!DOCTYPE") ? "Erreur serveur - vérifie DATABASE_URL" : "Erreur");
+      }
       if (!res.ok) throw new Error(data.error || "Failed");
       toast.success(`Payout de ${(data.total / 100).toFixed(2)}€ demandé`);
       router.refresh();
