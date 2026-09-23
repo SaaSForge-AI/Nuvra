@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { PublishButton, AddStepButton } from "@/components/ui/action-buttons";
 
 export default async function FunnelDetail({ params }: { params: { id: string } }) {
   const user = await getCurrentUser();
@@ -13,8 +14,11 @@ export default async function FunnelDetail({ params }: { params: { id: string } 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <div><h1 className="text-xl font-semibold">{funnel.name}</h1><p className="text-sm text-muted">{funnel.description}</p></div>
-        <Link href="/funnels"><Button variant="outline" size="sm">Back</Button></Link>
+        <div><h1 className="text-xl font-semibold">{funnel.name}</h1><p className="text-sm text-muted">{funnel.description} • 95% creator revenue</p></div>
+        <div className="flex gap-2">
+          <Link href="/funnels"><Button variant="outline" size="sm">Back</Button></Link>
+          <PublishButton id={funnel.id} type="funnels" isPublished={funnel.isPublished} />
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -39,6 +43,7 @@ export default async function FunnelDetail({ params }: { params: { id: string } 
                     </div>
                   </div>
                 ))}
+                {funnel.steps.length === 0 && <p className="text-sm text-muted text-center py-8">Aucune étape. Ajoutez votre première étape.</p>}
               </div>
             </CardContent>
           </Card>
@@ -46,7 +51,7 @@ export default async function FunnelDetail({ params }: { params: { id: string } 
 
         <div className="space-y-6">
           <Card><CardHeader><CardTitle className="text-base">Stats</CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><div className="flex justify-between"><span className="text-muted">Total Views</span><span>{funnel.steps.reduce((s, st) => s + st.views, 0)}</span></div><div className="flex justify-between"><span className="text-muted">Total Conversions</span><span>{funnel.steps.reduce((s, st) => s + st.conversions, 0)}</span></div><div className="flex justify-between"><span className="text-muted">Overall Conv</span><span>3.2%</span></div></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-base">Actions</CardTitle></CardHeader><CardContent className="space-y-2"><Button size="sm" className="w-full">Add Step</Button><Button variant="outline" size="sm" className="w-full">Preview Funnel</Button><Button variant="outline" size="sm" className="w-full">Duplicate</Button></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-base">Actions</CardTitle></CardHeader><CardContent className="space-y-2"><AddStepButton funnelId={funnel.id} /><Link href={`/f/${funnel.slug}`} target="_blank"><Button variant="outline" size="sm" className="w-full">Preview Funnel</Button></Link><Button variant="outline" size="sm" className="w-full" onClick={() => {}} disabled>Duplicate (bientôt)</Button></CardContent></Card>
         </div>
       </div>
     </div>

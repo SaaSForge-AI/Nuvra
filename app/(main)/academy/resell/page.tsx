@@ -1,20 +1,18 @@
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { calculateResellerSplit, calculateCreatorRevenue } from "@/lib/utils";
+import { CopyResellLink, ActivateResellButton, BuyAcademyButton } from "@/components/academy/resell-client";
 
 export default async function ResellPage() {
   const user = await getCurrentUser();
   if (!user) return null;
 
   let reseller = await prisma.reseller.findUnique({ where: { userId: user.id }, include: { sales: true } });
-  const price = 19700; // $197 new model
+  const price = 19700;
   const split = calculateResellerSplit(price);
-  const creatorExample = calculateCreatorRevenue(10000); // $100 product example
+  const creatorExample = calculateCreatorRevenue(10000);
 
-  // Check if user bought academy
   const academyCourse = await prisma.course.findFirst({ where: { isNuvraAcademy: true } });
   let hasAcademy = false;
   if (academyCourse && user) {
@@ -35,7 +33,7 @@ export default async function ResellPage() {
                 <p className="font-medium text-warning">Tu dois d'abord acheter la formation à 197$</p>
                 <p className="text-xs text-muted mt-1">Achète Nuvra Academy pour débloquer le droit de revente. Accès plateforme gratuit déjà inclus.</p>
               </div>
-              <Button className="w-full">Acheter à 197$ pour devenir revendeur</Button>
+              <BuyAcademyButton />
             </>
           ) : reseller ? (
             <>
@@ -43,12 +41,12 @@ export default async function ResellPage() {
               <div className="flex justify-between text-sm"><span className="text-muted">Ventes totales</span><span>{reseller.totalSales}</span></div>
               <div className="flex justify-between text-sm"><span className="text-muted">Revenu total</span><span>${(reseller.totalRevenue/100).toFixed(2)}</span></div>
               <div className="flex justify-between text-sm"><span className="text-muted">Ta commission (90%)</span><span className="text-success">${(reseller.totalCommission/100).toFixed(2)}</span></div>
-              <div className="pt-4"><label className="text-xs font-medium mb-1 block">Ton lien de revente</label><div className="flex gap-2"><Input value={`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/r/${reseller.customSlug || user.username}`} readOnly /><Button size="sm">Copier</Button></div><p className="text-[11px] text-muted mt-1">Partage ce lien : /r/{reseller.customSlug} → checkout 197$ → 90% pour toi</p></div>
+              <div className="pt-4"><label className="text-xs font-medium mb-1 block">Ton lien de revente</label><CopyResellLink slug={reseller.customSlug || user.username || "me"} /><p className="text-[11px] text-muted mt-2">Partage ce lien : /r/{reseller.customSlug} → checkout 197$ → 90% pour toi (~171.89€ net)</p></div>
             </>
           ) : (
             <>
               <p className="text-sm text-muted">Tu as acheté la formation ! Active ton statut revendeur maintenant (approbation instantanée).</p>
-              <form action="/api/reseller" method="POST"><Button className="w-full">Activer revente à 90%</Button></form>
+              <ActivateResellButton />
               <p className="text-[11px] text-muted">En activant tu acceptes les Conditions Revendeur. Pas de spam, pas de fausses promesses. Payouts après 14j pour gérer refunds.</p>
             </>
           )}

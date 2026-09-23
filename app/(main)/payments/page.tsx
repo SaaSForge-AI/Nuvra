@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPrice } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { PayoutButton } from "@/components/ui/action-buttons";
 
 export default async function PaymentsPage() {
   const user = await getCurrentUser();
@@ -32,13 +32,13 @@ export default async function PaymentsPage() {
         <div className="lg:col-span-2 space-y-6">
           <Card><CardHeader><CardTitle className="text-base">Orders</CardTitle></CardHeader><CardContent className="space-y-2">{orders.slice(0,10).map((o) => (<div key={o.id} className="flex justify-between items-center p-3 rounded-xl bg-surface2 border border-border text-sm"><div><p className="font-medium">{o.id.slice(0,8)} • {o.status}</p><p className="text-xs text-muted">{new Date(o.createdAt).toLocaleDateString()}</p></div><span className="font-medium">{formatPrice(o.total)}</span></div>))}{orders.length===0 && <p className="text-sm text-muted">No orders yet</p>}</CardContent></Card>
 
-          <Card><CardHeader><CardTitle className="text-base">Reseller Sales (90/10)</CardTitle></CardHeader><CardContent className="space-y-2">{resellerSales.map((s) => (<div key={s.id} className="p-3 rounded-xl bg-surface2 border border-border text-xs space-y-1"><div className="flex justify-between"><span>Price</span><span>{formatPrice(s.productPrice)}</span></div><div className="flex justify-between text-muted"><span>Stripe Fees</span><span>-{formatPrice(s.stripeFees)}</span></div><div className="flex justify-between text-muted"><span>Nuvra 10%</span><span>-{formatPrice(s.nuvraShare)}</span></div><div className="flex justify-between font-medium text-success"><span>Your 90%</span><span>{formatPrice(s.resellerShare)}</span></div></div>))}{resellerSales.length===0 && <p className="text-sm text-muted">No reseller sales yet</p>}</CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-base">Reseller Sales (90/10)</CardTitle></CardHeader><CardContent className="space-y-2">{resellerSales.map((s) => (<div key={s.id} className="p-3 rounded-xl bg-surface2 border border-border text-xs space-y-1"><div className="flex justify-between"><span>Price</span><span>{formatPrice(s.productPrice)}</span></div><div className="flex justify-between text-muted"><span>Stripe Fees</span><span>-{formatPrice(s.stripeFees)}</span></div><div className="flex justify-between text-muted"><span>Nuvra 10%</span><span>-{formatPrice(s.nuvraShare)}</span></div><div className="flex justify-between font-medium text-success"><span>Your 90%</span><span>{formatPrice(s.resellerShare)}</span></div></div>))}{resellerSales.length===0 && <p className="text-sm text-muted">No reseller sales yet - vendez Nuvra Academy à 197$ et touchez ~171.89€</p>}</CardContent></Card>
         </div>
 
         <div className="space-y-6">
           <Card><CardHeader><CardTitle className="text-base">Ledger (Immutable)</CardTitle></CardHeader><CardContent className="space-y-2 max-h-[400px] overflow-auto">{ledger.map((l) => (<div key={l.id} className="p-2 rounded-lg bg-surface2 border border-border text-xs"><div className="flex justify-between"><span className={`px-1.5 py-0.5 rounded text-[10px] border ${l.type === "SALE" ? "bg-accent/10 text-accent border-accent/20" : l.type === "COMMISSION" ? "bg-success/10 text-success border-success/20" : "bg-surface3 text-muted"}`}>{l.type}</span><span>{formatPrice(l.amount)}</span></div><p className="text-muted mt-1 truncate">{l.description}</p></div>))}{ledger.length===0 && <p className="text-sm text-muted">No ledger entries</p>}</CardContent></Card>
 
-          <Card><CardHeader><CardTitle className="text-base">Payouts</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-xs text-muted">Payouts: pending → available (14d) → processing → paid. Ledger allows reconstituting balance.</p><Button size="sm" className="w-full rounded-full">Request Payout</Button><div className="space-y-2 pt-2">{payouts.map((p) => (<div key={p.id} className="flex justify-between text-xs"><span>{p.status}</span><span>{formatPrice(p.amount)}</span></div>))}</div></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-base">Payouts</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-xs text-muted">Payouts: pending → available (14d) → processing → paid. Ledger permet de reconstituer le solde.</p><PayoutButton /><div className="space-y-2 pt-2">{payouts.map((p) => (<div key={p.id} className="flex justify-between text-xs"><span>{p.status}</span><span>{formatPrice(p.amount)}</span></div>))}</div></CardContent></Card>
         </div>
       </div>
     </div>

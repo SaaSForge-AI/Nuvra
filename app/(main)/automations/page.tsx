@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Zap, Plus } from "lucide-react";
+import { Zap } from "lucide-react";
+import { CreateAutomationButton } from "@/components/ui/action-buttons";
 
 export default async function AutomationsPage() {
   const user = await getCurrentUser();
@@ -11,10 +11,10 @@ export default async function AutomationsPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center justify-between"><div><h1 className="text-xl font-semibold">Automations</h1><p className="text-sm text-muted mt-1">Workflow builder with triggers, actions, conditions</p></div><Button className="rounded-full"><Plus className="h-4 w-4 mr-2" />New Automation</Button></div>
+      <div className="flex items-center justify-between"><div><h1 className="text-xl font-semibold">Automations</h1><p className="text-sm text-muted mt-1\">Workflow builder with triggers, actions, conditions • Gratuit inclus</p></div><CreateAutomationButton /></div>
 
       {automations.length === 0 ? (
-        <Card className="border-dashed"><CardContent className="p-12 text-center"><div className="h-12 w-12 rounded-2xl bg-surface3 border border-border flex items-center justify-center mx-auto mb-4"><Zap className="h-6 w-6 text-muted" /></div><h3 className="font-medium mb-2">Automate your business</h3><p className="text-sm text-muted mb-6 max-w-sm mx-auto">Triggers: user.created, lead.created, product.purchased, checkout.abandoned, course.started, lesson.completed, course.completed</p><Button className="rounded-full">Create automation</Button></CardContent></Card>
+        <Card className="border-dashed"><CardContent className="p-12 text-center"><div className="h-12 w-12 rounded-2xl bg-surface3 border border-border flex items-center justify-center mx-auto mb-4"><Zap className="h-6 w-6 text-muted" /></div><h3 className="font-medium mb-2\">Automate your business</h3><p className="text-sm text-muted mb-6 max-w-sm mx-auto">Triggers: user.created, lead.created, product.purchased, checkout.abandoned, course.started, lesson.completed, course.completed</p><CreateAutomationButton /></CardContent></Card>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {automations.map((a) => (

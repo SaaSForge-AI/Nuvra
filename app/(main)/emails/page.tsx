@@ -1,18 +1,16 @@
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { CreateCampaignButton } from "@/components/ui/action-buttons";
 
 export default async function EmailsPage() {
   const user = await getCurrentUser();
   if (!user) return null;
   const campaigns = await prisma.emailCampaign.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } });
-  const sequences = await prisma.emailSequence.findMany({ where: { userId: user.id } });
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center justify-between"><div><h1 className="text-xl font-semibold">Emails</h1><p className="text-sm text-muted mt-1">Broadcasts, templates, sequences</p></div><Button className="rounded-full"><Plus className="h-4 w-4 mr-2" />New Campaign</Button></div>
+      <div className="flex items-center justify-between"><div><h1 className="text-xl font-semibold">Emails</h1><p className="text-sm text-muted mt-1">Broadcasts, templates, sequences • Inclus gratuit</p></div><CreateCampaignButton /></div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">

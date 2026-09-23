@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/utils";
+import { ExportButton } from "@/components/ui/action-buttons";
 
 export default async function CustomersPage() {
   const user = await getCurrentUser();
@@ -11,7 +11,7 @@ export default async function CustomersPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center justify-between"><div><h1 className="text-xl font-semibold">Customers</h1><p className="text-sm text-muted mt-1">Manage customers and segments</p></div><Button size="sm" className="rounded-full">Export CSV</Button></div>
+      <div className="flex items-center justify-between"><div><h1 className="text-xl font-semibold">Customers</h1><p className="text-sm text-muted mt-1">Manage customers and segments • 95% revenue pour toi</p></div><ExportButton type="customers" /></div>
 
       <div className="grid grid-cols-4 gap-4">
         <Card><CardContent className="p-4"><p className="text-xs text-muted uppercase">Total Customers</p><p className="text-xl font-semibold mt-1">{customers.length}</p></CardContent></Card>
