@@ -6,9 +6,23 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const form = await req.formData();
-  const lessonId = form.get("lessonId") as string;
-  const courseId = form.get("courseId") as string;
+  let lessonId: string = "";
+  let courseId: string = "";
+  const contentType = req.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    try {
+      const body = await req.json();
+      lessonId = body.lessonId;
+      courseId = body.courseId;
+    } catch {}
+  }
+  if (!lessonId) {
+    const form = await req.formData().catch(()=>null);
+    if (form) {
+      lessonId = form.get("lessonId") as string;
+      courseId = form.get("courseId") as string;
+    }
+  }
 
   if (!lessonId || !courseId) return NextResponse.json({ error: "Missing" }, { status: 400 });
 

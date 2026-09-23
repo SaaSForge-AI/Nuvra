@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { PublishButton, AddStepButton } from "@/components/ui/action-buttons";
+import { PublishButton, AddStepButton, DuplicateFunnelButton } from "@/components/ui/action-buttons";
 
 export default async function FunnelDetail({ params }: { params: { id: string } }) {
   const user = await getCurrentUser();
@@ -51,7 +51,7 @@ export default async function FunnelDetail({ params }: { params: { id: string } 
 
         <div className="space-y-6">
           <Card><CardHeader><CardTitle className="text-base">Stats</CardTitle></CardHeader><CardContent className="space-y-3 text-sm"><div className="flex justify-between"><span className="text-muted">Total Views</span><span>{funnel.steps.reduce((s, st) => s + st.views, 0)}</span></div><div className="flex justify-between"><span className="text-muted">Total Conversions</span><span>{funnel.steps.reduce((s, st) => s + st.conversions, 0)}</span></div><div className="flex justify-between"><span className="text-muted">Overall Conv</span><span>3.2%</span></div></CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-base">Actions</CardTitle></CardHeader><CardContent className="space-y-2"><AddStepButton funnelId={funnel.id} /><Link href={`/f/${funnel.slug}`} target="_blank"><Button variant="outline" size="sm" className="w-full">Preview Funnel</Button></Link><Button variant="outline" size="sm" className="w-full" onClick={() => {}} disabled>Duplicate (bientôt)</Button></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-base">Actions</CardTitle></CardHeader><CardContent className="space-y-2"><AddStepButton funnelId={funnel.id} /><Link href={`/f/${funnel.slug}`} target="_blank"><Button variant="outline" size="sm" className="w-full">Preview Funnel</Button></Link><DuplicateFunnelButton funnelId={funnel.id} /></CardContent></Card>
         </div>
       </div>
     </div>

@@ -101,6 +101,9 @@ async function handleSuccessfulPayment(data: any) {
   if (isNuvraAcademy && resellerId) {
     const split = calculateResellerSplit(amount);
     
+    const resellerRecord = await prisma.reseller.findUnique({ where: { id: resellerId } });
+    const resellerUserId = resellerRecord?.userId;
+
     await prisma.resellerSale.create({
       data: {
         resellerId,
@@ -123,44 +126,47 @@ async function handleSuccessfulPayment(data: any) {
       },
     });
 
-    // Ledger entries for split
-    await prisma.ledgerEntry.create({
-      data: {
-        userId: resellerId,
-        orderId: order.id,
-        type: "COMMISSION",
-        amount: split.resellerShare,
-        description: "Reseller commission 90%",
-      },
-    });
+    // Ledger entries for split - always with proper userId
+    if (resellerUserId) {
+      await prisma.ledgerEntry.create({
+        data: {
+          userId: resellerUserId,
+          orderId: order.id,
+          type: "COMMISSION",
+          amount: split.resellerShare,
+          description: "Reseller commission 90% - Nuvra Academy 197$",
+        },
+      });
+    }
 
     await prisma.ledgerEntry.create({
       data: {
+        userId: resellerUserId,
         type: "FEE",
         amount: split.stripeFees,
-        description: "Stripe fees",
+        description: "Stripe fees 2.9%+30c - Academy resell",
         orderId: order.id,
       },
     });
 
     await prisma.ledgerEntry.create({
       data: {
+        userId: ownerId,
         type: "COMMISSION",
         amount: split.nuvraShare,
-        description: "Nuvra platform share 10%",
+        description: "Nuvra platform share 10% - Academy",
         orderId: order.id,
       },
     });
 
     // Notification to reseller
-    const resellerUser = await prisma.reseller.findUnique({ where: { id: resellerId }, include: { user: true } });
-    if (resellerUser) {
+    if (resellerUserId) {
       await prisma.notification.create({
         data: {
-          userId: resellerUser.userId,
+          userId: resellerUserId,
           type: "RESELLER_SALE",
           title: "New reseller sale! 🎉",
-          message: `You earned ${split.resellerShare / 100} from Nuvra Academy`,
+          message: `You earned ${split.resellerShare / 100}€ from Nuvra Academy (90% net)`,
         },
       });
     }
@@ -178,20 +184,39 @@ async function handleSuccessfulPayment(data: any) {
     });
     await prisma.ledgerEntry.create({
       data: {
+        userId: ownerId,
         orderId: order.id,
         type: "COMMISSION",
         amount: rev.nuvraShare,
-        description: "Nuvra platform fee 5%",
+        description: "Nuvra platform fee 5% - free platform model",
       },
     });
     await prisma.ledgerEntry.create({
       data: {
+        userId: ownerId,
         orderId: order.id,
         type: "FEE",
         amount: rev.stripeFees,
-        description: "Stripe fees",
+        description: "Stripe fees 2.9%+30c",
       },
     });
+
+    // Create or update customer
+    if (buyerUser && ownerId) {
+      await prisma.customer.upsert({
+        where: { id: `${ownerId}-${buyerUser.email}` },
+        update: { totalSpent: { increment: amount }, ordersCount: { increment: 1 } },
+        create: { id: `${ownerId}-${buyerUser.email}`, userId: ownerId, email: buyerUser.email, firstName: buyerUser.firstName, lastName: buyerUser.lastName, totalSpent: amount, ordersCount: 1 },
+      }).catch(async () => {
+        // Fallback if upsert fails due to custom id
+        const existing = await prisma.customer.findFirst({ where: { userId: ownerId, email: buyerUser.email } });
+        if (existing) {
+          await prisma.customer.update({ where: { id: existing.id }, data: { totalSpent: { increment: amount }, ordersCount: { increment: 1 } } });
+        } else {
+          await prisma.customer.create({ data: { userId: ownerId, email: buyerUser.email, firstName: buyerUser.firstName, lastName: buyerUser.lastName, totalSpent: amount, ordersCount: 1 } });
+        }
+      });
+    }
   }
 
   // Enrollment if course

@@ -219,3 +219,29 @@ export function SaveProfileButton({ data }: { data: { name: string; bio: string;
     </button>
   );
 }
+
+export function DuplicateFunnelButton({ funnelId }: { funnelId: string }) {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const handle = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/funnels/${funnelId}/duplicate`, { method: "POST" });
+      const text = await res.text();
+      let data: any;
+      try { data = JSON.parse(text); } catch { throw new Error("Erreur"); }
+      if (!res.ok) throw new Error(data.error);
+      toast.success("Funnel dupliqué !");
+      router.push(`/funnels/${data.id}`);
+    } catch (e: any) {
+      toast.error(e.message || "Erreur");
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <button onClick={handle} disabled={loading} className="w-full px-4 py-2 rounded-lg bg-zinc-800 text-white text-sm border border-zinc-700 hover:bg-zinc-700 disabled:opacity-50">
+      {loading ? "..." : "Duplicate"}
+    </button>
+  );
+}

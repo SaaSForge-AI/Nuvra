@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       entityId: productId || courseId,
       metadata: JSON.stringify({ amount, resellerCode, affiliateCode }),
     },
-  });
+  }).catch(()=>{});
 
-  return NextResponse.json(checkout);
+  return NextResponse.json({ ...checkout, resellerId: reseller?.id || null });
 }

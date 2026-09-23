@@ -30,7 +30,7 @@ export default async function PageBuilder({ params }: { params: { id: string } }
               <div key={b} className="p-2 rounded-lg bg-surface2 border border-border hover:border-accent/20 cursor-pointer">{b}</div>
             ))}
           </CardContent></Card>
-          <Card><CardHeader><CardTitle className="text-sm">Info</CardTitle></CardHeader><CardContent className="text-xs text-muted space-y-2"><p>Slug: /p/{page.slug}</p><p>Drag & drop bientôt. Contenu JSON éditable pour l'instant.</p><p className="text-[11px]">95% creator revenue sur les ventes via cette page</p></CardContent></Card>
+          <Card><CardHeader><CardTitle className="text-sm">Info</CardTitle></CardHeader><CardContent className="text-xs text-muted space-y-2"><p>Slug: /p/{page.slug}</p><p>Contenu JSON éditable - builder visuel drag & drop en roadmap, fonctionnel via API pour l'instant.</p><p className="text-[11px]">95% creator revenue sur les ventes via cette page • Public at /p/{page.slug}</p></CardContent></Card>
         </div>
 
         <div className="lg:col-span-3">

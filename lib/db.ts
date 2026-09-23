@@ -603,6 +603,18 @@ CREATE TABLE IF NOT EXISTS Review (
     const params: any[] = [];
     for (const [key, value] of Object.entries(where)) {
       if (value === undefined) continue;
+      // Handle composite unique keys like userId_courseId, enrollmentId_lessonId, etc.
+      if (key.includes("_") && typeof value === "object" && value !== null && !Array.isArray(value) && !(value as any).contains && !(value as any).gte && !(value as any).lte && !(value as any).in && !(value as any).equals) {
+        const subKeys = Object.keys(value as any);
+        // Check if it's a composite key object (e.g., { userId: "...", courseId: "..." })
+        if (subKeys.length > 0 && subKeys.every(k => typeof (value as any)[k] !== "object")) {
+          for (const subKey of subKeys) {
+            conditions.push(`${subKey} = ?`);
+            params.push((value as any)[subKey]);
+          }
+          continue;
+        }
+      }
       if (typeof value === "object" && value !== null && !Array.isArray(value)) {
         const v: any = value;
         if (v.contains !== undefined) {

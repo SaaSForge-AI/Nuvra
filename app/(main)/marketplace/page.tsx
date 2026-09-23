@@ -3,27 +3,34 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { formatPrice } from "@/lib/utils";
-import { Search, Star, Users } from "lucide-react";
+import { Star, Users } from "lucide-react";
+import { MarketplaceSearch } from "@/components/marketplace/search";
 
 export default async function MarketplacePage({ searchParams }: { searchParams: { q?: string; category?: string } }) {
   const where: any = { status: "PUBLISHED" };
-  if (searchParams.q) where.title = { contains: searchParams.q, mode: "insensitive" };
+  if (searchParams.q) where.title = { contains: searchParams.q };
   if (searchParams.category) where.category = searchParams.category;
 
-  const courses = await prisma.course.findMany({
+  const coursesRaw = await prisma.course.findMany({
     where,
     include: { user: true, marketplaceListing: true, enrollments: true, reviews: true },
     orderBy: { createdAt: "desc" },
-    take: 24,
+    take: 50,
   });
+
+  // Filter approved listings (if listing exists, must be approved; if no listing, allow published courses - for backward compat)
+  const courses = coursesRaw.filter((c: any) => {
+    if (!c.marketplaceListing) return true;
+    return c.marketplaceListing.isApproved;
+  }).slice(0,24);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div><h1 className="text-xl font-semibold">Marketplace</h1><p className="text-sm text-muted mt-1">Discover courses from creators</p></div>
 
       <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" /><input placeholder="Search courses..." className="w-full h-11 pl-10 pr-4 rounded-xl border border-border bg-surface2 text-sm text-white placeholder:text-muted" defaultValue={searchParams.q} /></div>
-        <div className="flex gap-2">
+        <MarketplaceSearch />
+        <div className="flex gap-2 flex-wrap">
           {["All", "Business", "Marketing", "Design", "Tech"].map((cat) => (
             <Link key={cat} href={cat === "All" ? "/marketplace" : `/marketplace?category=${cat}`}><Button variant={searchParams.category === cat ? "default" : "outline"} size="sm" className="rounded-full">{cat}</Button></Link>
           ))}

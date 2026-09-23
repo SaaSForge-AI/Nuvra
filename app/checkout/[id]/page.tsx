@@ -41,9 +41,13 @@ function CheckoutContent() {
       const text = await res.text();
       let data: any;
       try { data = JSON.parse(text); } catch { throw new Error("Erreur serveur - DB manquante?"); }
+      if (data.error) throw new Error(data.error);
+      // Store for success page mock confirmation
+      if (typeof window !== "undefined") {
+        localStorage.setItem("last_checkout", JSON.stringify({ productId: id, courseId: id, resellerCode, customerEmail, resellerId: data.resellerId || null }));
+      }
       if (data.url) window.location.href = data.url;
       else if (data.free) window.location.href = "/learn";
-      else if (data.error) alert(data.error);
     } catch (e: any) {
       alert(e.message);
     } finally {
